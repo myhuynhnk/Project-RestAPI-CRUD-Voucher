@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>67.S10</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.0-10/css/all.min.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <!-- Import Datatable sau jquery -->
+    <!-- Import them style bootstrap cho datatable -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.10.24/css/dataTables.bootstrap4.min.css">
+    <script src="https://cdn.datatables.net/1.10.24/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.10.24/js/dataTables.bootstrap4.min.js"></script>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2 style="text-align: center;">Quản trị Voucher</h2>
+        <div class="jumbotron container">
+            <div class="row form-group">
+                <div class="col-sm-3">
+                    <label for="input-voucher-code">Mã Voucher</label>
+                </div>
+                <div class="col-sm-9">
+                    <input type="text" id="input-voucher-code" name="vouchercodes" placeholder="Voucher code"
+                        class="form-control">
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col-sm-3">
+                    <label for="input-discount">Phần trăm giảm giá</label>
+                </div>
+                <div class="col-sm-9">
+                    <input type="number" id="input-discount" name="discount" placeholder="Discount"
+                        class="form-control">
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col-sm-3">
+                    <label for="input-note">Ghi chú</label>
+                </div>
+                <div class="col-sm-9">
+                    <input type="text" id="input-note" name="note" placeholder="Note" class="form-control">
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col-sm-3">
+                    <label for="input-createDate">Ngày Tạo</label>
+                </div>
+                <div class="col-sm-9">
+                    <input type="date" id="input-createDate" name="createDate" placeholder="Create Date"
+                        class="form-control">
+                </div>
+            </div>
+            <div class="row form-group">
+                <div class="col-sm-3">
+                    <label for="input-updateDate">Ngày sửa</label>
+                </div>
+                <div class="col-sm-9">
+                    <input type="date" id="input-updateDate" name="updateDate" placeholder="Update Date"
+                        class="form-control">
+                </div>
+            </div>
+            <div class="row pull-right">
+                <div class="col-sm-12">
+                    <button id="btn-save-data" class="btn btn-info">Save Data</button>
+                </div>
+                <div class="col-sm-12 mt-3 d-flex justify-content-end">
+                    <button id="btn-delete-all" class="btn btn-danger">DELETE ALL</button>
+                </div>
+            </div>
+        </div>
+        <table class="table table-bordered table-striped table-hover" id="user-table">
+            <thead>
+                <tr>
+                    <th>STT</th>
+                    <th>Mã giảm giá</th>
+                    <th>Phần trăm giảm giá</th>
+                    <th>Ghi Chú</th>
+                    <th>Ngày tạo</th>
+                    <th>Ngày cập nhật</th>
+                    <th>Actions</th>
+                </tr>
+        </table>
+
+    </div>
+    <div id="div-form-mode" class="text-primary px-1" style="float: right">
+    </div>
+
+    <!-- Delete confirm modal -->
+    <div>
+        <div class="modal fade" tabindex="-1" id="delete-confirm-modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modal-title">Voucher Delete Confirmation</h5>
+                        <button class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <label>Bạn có chắc chắn muốn xóa voucher này không?</label>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button class="btn btn-danger" id="btn-confirm-delete-voucher">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- MODAL DELETE ALL VOUCHER -->
+    <div>
+        <div class="modal fade" tabindex="-1" id="delete-all-modal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="h5-modal-title">Voucher Delete Confirmation</h5>
+                        <button class="close" data-dismiss="modal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <label>BẠN MUỐN XÓA HẾT DỮ LIỆU</label>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+                        <button class="btn btn-danger" id="btn-confirm-delete-all">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        /**REGION 1: VÙNG KHAI BÁO CÁC BIẾN TOÀN CỤC DÙNG CHUNG CHO TOÀN CHƯƠNG TRÌNH **/
+        "use strict";
+        const gNORMAL_FORM_MODE = "Normal";
+        const gINSERT_FORM_MODE = "Insert";
+        const gUPDATE_FORM_MODE = "Update";
+        const gDELETE_FORM_MODE = "Delete";
+
+        var gFormMode = gNORMAL_FORM_MODE;
+
+        var gSTT = 1;
+        var gVoucherId = 0;
+
+        const gTABLE_COL = ["id", "maVoucher", "phanTramGiamGia", "ghiChu", "ngayTao", "ngayCapNhat", "actions"];
+        const gSTT_COL = 0;
+        const gMA_VOUCHER_COL = 1;
+        const gPHAN_TRAM_GIAM_GIA_COL = 2;
+        const gGHI_CHU_COL = 3;
+        const gNGAY_TAO_COL = 4;
+        const gNGAY_CAP_NHAT_COL = 5;
+        const gACTIONS_COL = 6;
+
+        var gTable = $("#user-table").DataTable({
+            "columns": [
+                { "data": gTABLE_COL[gSTT_COL] },
+                { "data": gTABLE_COL[gMA_VOUCHER_COL] },
+                { "data": gTABLE_COL[gPHAN_TRAM_GIAM_GIA_COL] },
+                { "data": gTABLE_COL[gGHI_CHU_COL] },
+                { "data": gTABLE_COL[gNGAY_TAO_COL] },
+                { "data": gTABLE_COL[gNGAY_CAP_NHAT_COL] },
+                { "data": gTABLE_COL[gACTIONS_COL] },
+            ],
+
+            columnDefs: [
+                {
+                    targets: gSTT_COL,
+                    render: function () {
+                        return gSTT++;
+                    }
+                },
+
+                {
+                    targets: gACTIONS_COL,
+                    defaultContent: `
+                        <span><i class="fas fa-edit fa-lg text-info icon-edit" style="cursor: pointer"></i>
+                        <span><i class="far fa-trash-alt fa-lg text-danger icon-delete" style="cursor: pointer"></i></span>`
+                }
+            ]
+        });
+
+        var gVoucherDB = {
+            vouchers: [],
+
+        };
+
+        /**REGION 2: VÙNG KHAI BÁO THỰC THI CÁC HÀM SỰ KIỆN **/
+        $(document).ready(function () {
+            // hàm sự kiện load trang
+            onPageLoading();
+            // hàm sự kiện click icon edit
+            $("#user-table").on("click", ".icon-edit", function () {
+                onBtnIconEditVoucherClick(this);
+            });
+            // hàm sự kiện click icon delete
+            $("#user-table").on("click", ".icon-delete", function () {
+                onBtnIconDeleteVoucherClick(this);
+            });
+            // hàm sự kiện click nút save 
+            $("#btn-save-data").on("click", onBtnSaveDataClick);
+            // hàm sự kiện click nút confirm delete trong modal
+            $("#btn-confirm-delete-voucher").on("click", onBtnConfirmDeleteVoucherClick);
+            // hàm sự kiện click nút delete all voucher
+            $("#btn-delete-all").on("click", onBtnDeleteAllVoucherClick);
+            // hàm sự kiện click nút confirm delete all trong modal 
+            $("#btn-confirm-delete-all").on("click", onBtnConfirmDeleteAllVoucher);
+
+        })
+
+        /**REGION 3: VÙNG KHAI BÁO XỬ LÝ CÁC HÀM XỬ LÝ SỰ KIỆN **/
+        // hàm xử lý sự kiện khi load trang
+        function onPageLoading() {
+            "use strict";
+            callApiGetAllVoucher();
+            gFormMode = gNORMAL_FORM_MODE;
+            $("#div-form-mode").html(gFormMode);
+
+
+        }
+
+        // hàm xử lý sự kiện click icon edit
+        function onBtnIconEditVoucherClick(paramIconEditElement) {
+            "use strict";
+            // chuyển trạng thái thông báo insert
+            gFormMode = gINSERT_FORM_MODE;
+            $("#div-form-mode").html(gFormMode);
+            // lấy Id của voucher từ row tương ứng
+            gVoucherId = getVoucherIdDataRowToTable(paramIconEditElement);
+            callAPiGetVoucherByVoucherId(gVoucherId);
+        }
+
+        // hàm xử lý sự kiện click icon delete
+        function onBtnIconDeleteVoucherClick(paramIconDeleteElement) {
+            "use strict";
+            // chuyển trạng thái thông báo và delete
+            gFormMode = gDELETE_FORM_MODE;
+            $("#div-form-mode").html(gFormMode);
+            // lấy Id của voucher từ row tương ứng
+            gVoucherId = getVoucherIdDataRowToTable(paramIconDeleteElement);
+            callAPiGetVoucherByVoucherId(gVoucherId);
+            //hiển thị modal form xác nhận
+            $("#delete-confirm-modal").modal("show");
+
+        }
+
+        // hàm xử lý sự kiện click nút saveData
+        function onBtnSaveDataClick() {
+            "use strict";
+            var vVoucher = {
+                maVoucher: "",
+                phanTramGiamGia: "",
+                ghiChu: "",
+            }
+            //B1: thu thập dữ liệu
+            getDataForm(vVoucher);
+            //B2: validate dữ liệu
+            var vIsValidate = validateDataForm(vVoucher);
+            if (vIsValidate) {
+                //B3: call Api để tạo voucher mới hoặc update voucher đã tồn tại
+                saveVoucherData(vVoucher);
+
+                gFormMode === gINSERT_FORM_MODE ? alert("Cập nhật voucher thành công!") : alert("Thêm mới voucher thành công!");
+                //reset form 
+                resetFormToStart();
+            }
+        }
+
+        // hàm xử lý sự kiện click nút confirm delete voucher trong modal
+        function onBtnConfirmDeleteVoucherClick() {
+            "use strict";
+            $.ajax({
+                url: `http://localhost:8080/api/vouchers/${gVoucherId}`,
+                type: "DELETE",
+                success: function (res) {
+                    callApiGetAllVoucher();
+                    alert("Xóa một voucher thành công!");
+                    resetFormToStart();
+                    $("#delete-confirm-modal").modal("hide");
+                },
+                error: function (err) {
+                    console.log(err.response);
+                }
+            });
+        }
+
+
+        // hàm xử lý sự kiện click nút delete all voucher
+        function onBtnDeleteAllVoucherClick() {
+            "use strict";
+            // chuyển trạng thái thông báo và delete
+            gFormMode = gDELETE_FORM_MODE;
+            $("#div-form-mode").html(gFormMode);
+            // hiển thị modal xác nhận
+            $("#delete-all-modal").modal("show");
+        }
+
+        // hàm xử lý sự kiện click nút delete all trong modal form xác nhận 
+        function onBtnConfirmDeleteAllVoucher() {
+            "use strict";
+            $.ajax({
+                url: "http://localhost:8080/api/vouchers",
+                type: "DELETE",
+                success: function (res) {
+                    alert("XÓA TẤT CẢ VOUCHER THÀNH CÔNG!");
+                    callApiGetAllVoucher();
+                    $("#delete-all-modal").modal("hide");
+                },
+                error: function (err) {
+                    console.log(err.response);
+                }
+            });
+        }
+
+        /**REGION 4: VÙNG KHAI BÁO CÁC HÀM DÙNG CHO CHƯƠNG TRÌNH **/
+        // hàm thu thập dữ liệu trên form
+        function getDataForm(paramVoucherObj) {
+            "use strict";
+            paramVoucherObj.maVoucher = $("#input-voucher-code").val();
+            paramVoucherObj.phanTramGiamGia = $("#input-discount").val();
+            paramVoucherObj.ghiChu = $("#input-note").val();
+        }
+
+        // hàm validate dữ liệu trên form
+        function validateDataForm(paramVoucherObj) {
+            if (paramVoucherObj.maVoucher === "") {
+                alert("Vui lòng nhập mã voucher");
+                return false;
+            }
+            if (paramVoucherObj.phanTramGiamGia === "") {
+                alert("Vui lòng nhập phần trăm giảm giá");
+                return false;
+            }
+            if (paramVoucherObj.maVoucher === "") {
+                alert("Vui lòng nhập ghi chú cho voucher");
+                return false;
+            }
+
+            return true;
+        }
+
+        // hàm xử lý lưu voucher (thêm mới hoặc cập nhật) 
+        function saveVoucherData(paramVoucherData) {
+            "use strict";
+            if (gFormMode === gINSERT_FORM_MODE) {
+                callApiUpdateVoucher(paramVoucherData);
+            } else {
+                callApiCreateVoucher(paramVoucherData);
+            }
+        }
+
+        // hàm call api lấy danh sách voucher và hiển thị lên table
+        function callApiGetAllVoucher() {
+            "use strict";
+            $.ajax({
+                url: "http://localhost:8080/api/vouchers",
+                type: "GET",
+                dataType: "json",
+                success: function (res) {
+                    // console.log(res);
+                    gVoucherDB.vouchers = res;
+                    // hiển thị danh sách lên table
+                    loadDataListVoucherToTable(gVoucherDB.vouchers);
+                },
+                error: function (err) {
+                    console.log(err.response);
+                }
+            })
+        }
+
+        // hàm call api lấy một object voucher by voucherId
+        function callAPiGetVoucherByVoucherId(paramVoucherId) {
+            "use strict";
+            $.ajax({
+                url: `http://localhost:8080/api/vouchers/${paramVoucherId}`,
+                type: "GET",
+                dataType: "json",
+                success: function (res) {
+                    // console.log(res);
+                    loadDataVoucherToFormInput(res);
+                },
+                error: function (err) {
+                    console.log(err.response);
+                }
+            })
+        }
+
+        // hàm call Api tạo mới một voucher
+        function callApiCreateVoucher(paramVoucher) {
+            "use strict";
+            $.ajax({
+                url: "http://localhost:8080/api/vouchers",
+                type: "POST",
+                contentType: 'application/json',
+                data: JSON.stringify(paramVoucher),
+                success: function (res) {
+                    console.log(res);
+                    callApiGetAllVoucher();
+                },
+                error: function (err) {
+                    console.log(err.response);
+                }
+            })
+        }
+        // hàm callApi update voucher
+        function callApiUpdateVoucher(paramVoucher) {
+            "use strict";
+            $.ajax({
+                url: `http://localhost:8080/api/vouchers/${gVoucherId}`,
+                type: "PUT",
+                contentType: 'application/json',
+                data: JSON.stringify(paramVoucher),
+                success: function (res) {
+                    // console.log(res);
+                    callApiGetAllVoucher();
+                },
+                error: function (err) {
+                    console.log(err.response);
+                }
+            })
+        }
+
+        // hàm hiển thị danh sách voucher lên table
+        function loadDataListVoucherToTable(paramVouchers) {
+            "use strict";
+            gTable.clear();
+            gTable.rows.add(paramVouchers);
+            gTable.draw();
+        }
+
+        // hàm hiển thị thông tin voucher lên các fiel trên form
+        function loadDataVoucherToFormInput(paramResponseVoucherObj) {
+            "use strict";
+            // convert ngày tháng từ backend trả về (dd-mm-yyyy) theo đúng format form front end ("yyyy-MM-dd")
+            var dateNgayTao = new Date(paramResponseVoucherObj.ngayTao);
+            var vNgayTao = formatDate(dateNgayTao.toDateString());
+
+            var dateNgayCapNhat = new Date(paramResponseVoucherObj.ngayCapNhat);
+            var vNgayCapNhat = formatDate(dateNgayTao.toDateString());
+            // console.log(vNgayTao);
+
+            $("#input-voucher-code").val(paramResponseVoucherObj.maVoucher);
+            $("#input-discount").val(paramResponseVoucherObj.phanTramGiamGia);
+            $("#input-note").val(paramResponseVoucherObj.ghiChu);
+            $("#input-createDate").val(vNgayTao);
+            $("#input-updateDate").val(vNgayCapNhat);
+        }
+
+        // hàm lấy voucherId của row tương ứng trong table
+        function getVoucherIdDataRowToTable(paramIconElement) {
+            "use strict";
+            var vRowSelected = $(paramIconElement).closest("tr");
+            var vDataRow = gTable.row(vRowSelected).data();
+            // console.log(vDataRow);
+            var vDataRowId = vDataRow.id;
+            return vDataRowId;
+        }
+
+        // hàm convert định dạng Date về dạng String format (yyyy-MM-dd)
+        function formatDate(paramDate) {
+            "use strict";
+            var d = new Date(paramDate);
+            var month = '' + (d.getMonth() + 1);
+            var day = '' + d.getDate();
+            var year = d.getFullYear();
+
+            if (month.length < 2)
+                month = '0' + month;
+            if (day.length < 2)
+                day = '0' + day;
+
+            return [year, month, day].join('-');
+        }
+
+        function resetFormToStart() {
+            "use strict";
+            gSTT = 1;
+            gVoucherId = 0;
+            gFormMode = gNORMAL_FORM_MODE;
+            $("#div-form-mode").html(gFormMode);
+
+            $("#input-voucher-code").val("");
+            $("#input-discount").val("");
+            $("#input-note").val("");
+            $("#input-createDate").val("");
+            $("#input-updateDate").val("");
+        }
+    </script>
+</body>
+
+</html>
